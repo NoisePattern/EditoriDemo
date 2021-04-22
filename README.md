@@ -6,7 +6,7 @@ Editori on toteutettu puhtaasti JavaScriptillä joten sen voi kloonata mihin tah
 
 ## Käyttöohje
 
-### Pohja-asetukset
+### Pohja
 
 **Pohjakoko:** Asettaa editorialueen pikselileveys ja -korkeus.
 
@@ -76,7 +76,7 @@ Kun editorialueelle on lisätty ainakin yksi kuvakenttä, sem ominaisuuksia void
 
 **Tausta:** Valinnalla voidaan kentän taustan väritäyttö kytkeä päälle ja pois.
 
-** Taustaväri:** Kentän taustavärin valinta.
+**Taustaväri:** Kentän taustavärin valinta.
 
 **Täyteleveys:** Kuvan ja kentän reunuksen väliin asetettavan tyhjän tilan koko pikseleissä. Täytealue piirretään taustavärillä.
 
