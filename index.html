@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+	<title>Canvas-demo</title>
+	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+	<link rel="stylesheet" href="inc/style.css">
+</head>
+
+<body>
+	<div id="mainbody" class="container-fluid vh-100 d-flex overflow-hidden">
+
+		<div class="row flex-fill">
+			<!-- UI column -->
+			<div id="uiColumn" class="col-3 p-2 mh-100 overflow-auto">
+				
+				<!-- Canvas management -->
+				<div id="canvasManager" class="accordion accordion-flush"><div class="accordion-item">
+					<h2 class="accordion-header"><button class="accordion-button p-1 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#canvasCollapse">Pohja</button></h2>
+					<div id="canvasCollapse" class="accordion-collapse collapse show" data-bs-parent="#canvasManager"><div class="accordion-body p-1">
+						<div class="row mt-1 mb-2">
+							<label class="col-3 col-form-label col-form-label-sm">Pohjakoko</label>
+							<label for="canvasWidth" class="col-2 col-form-label col-form-label-sm">Leveys:</label>
+							<div class="col-2">
+								<input type="text" class="form-control form-control-sm" id="canvasWidth">
+							</div>
+							<label for="canvasHeight" class="col-2 col-form-label col-form-label-sm">Korkeus:</label>
+							<div class="col-2">
+								<input type="text" class="form-control form-control-sm" id="canvasHeight">
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label for="canvasColor" class="col-3 col-form-label col-form-label-sm">Taustaväri</label>
+							<div class="col-9">
+								<input type="color" class="form-control form-control-color form-control-sm" id="canvasColor">
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label for="canvasFileInput" class="col-3 col-form-label col-form-label-sm">Taustakuva</label>
+							<div class="col-9">
+								<div class="input-group">
+									<input type="file" class="form-control form-control-sm" id="canvasFileInput">
+									<button type="button" class="btn btn-primary btn-sm" id="canvasImageRemove">Poista</button>
+								</div>
+							</div>
+							<div class="col-9 offset-3 mt-1">
+								<div class="form-check">
+									<input class="form-check-input" type="checkbox" id="canvasBgScale">
+									<label for="canvasBgScale" class="form-check-label">Venytä pohjaan</label>
+								</div>
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label for="navigationBorder" class="col-3 col-form-label col-form-label-sm">Navigaatio</label>
+							<div class="col-9">
+								<div id="navigationBorder">
+									<div id="navigation">
+										<div id="navigationBox"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row mb-1">
+							<div class="col-12">
+								<button type="button" class="btn btn-primary btn-sm" id="imageCreate">Tee kuva</button>
+							</div>
+						</div>
+					</div></div>
+				</div></div>
+
+
+
+				<!-- Item management -->
+				<div id="itemManager" class="accordion accordion-flush mt-2"><div class="accordion-item">
+					<h2 class="accordion-header"><button class="accordion-button p-1 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#itemCollapse">Kentät</button></h2>
+					<div id="itemCollapse" class="accordion-collapse collapse show" data-bs-parent="#itemManager"><div class="accordion-body p-1">
+						<div class="row mt-1 mb-2">
+							<label class="col-4 col-form-label col-form-label-sm">Uusi kenttä:</label>
+							<div class="col-8">
+								<button type="button" class="btn btn-primary btn-sm" id="addTextItem">Teksti</button>
+								<button type="button" class="btn btn-primary btn-sm" id="addImageItem">Kuva</button>
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label class="col-4 col-form-label col-form-label-sm">Kentät:</label>
+							<div class="col-8">
+								<select id="itemSelect" class="form-select form-select-sm"></select>
+							</div>
+						</div>
+						<div class="row mb-2">
+							<div class="col offset-4">
+								<button id="itemUp" type="button" class="btn btn-primary btn-sm">Ylös</button>
+								<button id="itemDown" type="button" class="btn btn-primary btn-sm">Alas</button>
+								<button id="itemRemove" type="button" class="btn btn-primary btn-sm">Poista</button>
+							</div>
+						</div>
+						<div class="row mb-1">
+							<div class="col offset-4">
+								<div class="form-check">
+									<input class="form-check-input" type="checkbox" id="showBounds" checked>
+									<label for="canvasBgScale" class="form-check-label">Näytä reunukset</label>
+								</div>
+							</div>
+						</div>
+					</div></div>
+				</div></div>
+
+
+
+				<!-- Text item management -->
+				<div id="textItem" class="accordion accordion-flush mt-2"><div class="accordion-item">
+					<h2 class="accordion-header"><button class="accordion-button p-1 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#textCollapse">Tekstikenttä</button></h2>
+					<div id="textCollapse" class="accordion-collapse collapse show" data-bs-parent="#textItem"><div class="accordion-body p-1">
+						<div class="row mt-1 mb-2">
+							<label for="textItemName" class="col-3 col-form-label col-form-label-sm">Nimi</label>
+							<div class="col-9">
+								<input type="text" class="form-control form-control-sm" id="textItemName">
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label for="textItemContent" class="col-3 col-form-label col-form-label-sm">Teksti</label>
+							<div class="col-9">
+								<input type="text" class="form-control form-control-sm" id="textItemContent">
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label for="textItemFont" class="col-3 col-form-label col-form-label-sm">Fontti</label>
+							<div class="col-9">
+								<select id="textItemFont" class="form-select form-select-sm">
+									<option value="Arial">Arial</option>
+									<option value="Courier New">Courier New</option>
+									<option value="Garamond">Garamond</option>
+									<option value="Georgia">Georgia</option>
+									<option value="Times New Roman">Times New Roman</option>
+									<option value="Verdana">Verdana</option>
+								</select>
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label for="textItemSize" class="col-3 col-form-label col-form-label-sm">Tekstikoko</label>
+							<div class="col-2">
+								<input type="text" class="form-control form-control-sm" id="textItemSize">
+							</div>						
+						</div>
+						<div class="row mb-2">
+							<label for="textItemColor" class="col-3 col-form-label col-form-label-sm">Tekstiväri</label>
+							<div class="col-9">
+								<input type="color" class="form-control form-control-color form-control-sm" value="#000000" id="textItemColor">
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label class="col-3 col-form-label col-form-label-sm">Sijainti</label>
+							<label for="textItemX" class="col-2 col-form-label col-form-label-sm">X:</label>
+							<div class="col-2">
+								<input type="text" class="form-control form-control-sm" id="textItemX">
+							</div>
+							<label for="textItemY" class="col-2 col-form-label col-form-label-sm">Y:</label>
+							<div class="col-2">
+								<input type="text" class="form-control form-control-sm" id="textItemY">
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label for="textItemAreaType" class="col-3 col-form-label col-form-label-sm">Koko</label>
+							<div class="col-9">
+								<select id="textItemAreaType" class="form-select form-select-sm">
+									<option value="0" selected>Automaattinen</option>
+									<option value="1">Lukittu koko</option>
+								</select>
+							</div>
+						</div>
+						<div id="textItemResizer">
+							<div id="textItemAreaManual" class="row mb-2">
+								<label for="textItemWidth" class="offset-3 col-2 col-form-label col-form-label-sm">Leveys:</label>
+								<div class="col-2">
+									<input type="text" class="form-control form-control-sm" id="textItemWidth">
+								</div>
+								<label for="textItemHeight" class="col-2 col-form-label col-form-label-sm">Korkeus:</label>
+								<div class="col-2">
+									<input type="text" class="form-control form-control-sm" id="textItemHeight">
+								</div> 
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label for="textItemBackground" class="col-3 col-form-label col-form-label-sm">Tausta</label>
+							<div class="col-2 pt-1">
+								<input type="checkbox" class="form-check-input" id="textItemBackground">
+							</div>
+							<label for="textItemBackgroundColor" class="col-3 col-form-label col-form-label-sm">Taustaväri</label>
+							<div class="col">
+								<input type="color" class="form-control form-control-color form-control-sm" value="#ffffff" id="textItemBackgroundColor">
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label for="textItemPadding" class="col-3 col-form-label col-form-label-sm">Täyteleveys</label>
+							<div class="col-2">
+								<input type="text" class="form-control form-control-sm" id="textItemPadding">
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label for="textItemBorder" class="col-3 col-form-label col-form-label-sm">Reunaleveys</label>
+							<div class="col-2">
+								<input type="text" class="form-control form-control-sm" id="textItemBorder">
+							</div>
+							<label for="textItemBorderColor" class="col-3 col-form-label col-form-label-sm">Reunaväri</label>
+							<div class="col">
+								<input type="color" class="form-control form-control-color form-control-sm" value="#000000" id="textItemBorderColor">
+							</div>
+						</div>
+						<div class="row mb-1">
+							<label for="textItemRoundness" class="col-3 col-form-label col-form-label-sm">Kulmapyöreys</label>
+							<div class="col pt-1">
+								<input type="range" class="form-range" min="0" max="100" id="textItemRoundness">
+							</div>
+						</div>
+					</div></div>
+				</div></div>
+
+
+
+				<!-- Image item management -->
+				<div id="imageItem" class="accordion accordion-flush mt-2"><div class="accordion-item">
+					<h2 class="accordion-header"><button class="accordion-button p-1 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#imageCollapse">Kuvakenttä</button></h2>	
+					<div id="imageCollapse" class="accordion-collapse collapse show" data-bs-parent="#imageItem"><div class="accordion-body p-1">
+						<div class="row mt-1 mb-2">
+							<label for="imageItemName" class="col-3 col-form-label col-form-label-sm">Nimi</label>
+							<div class="col-9">
+								<input type="text" class="form-control form-control-sm" id="imageItemName">
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label for="imageFileInput" class="col-3 col-form-label col-form-label-sm">Lataa kuva</label>
+							<div class="col-9">
+								<input type="file" class="form-control form-control-sm" id="imageFileInput">
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label class="col-3 col-form-label col-form-label-sm">Sijainti</label>
+							<label for="imageItemX" class="col-2 col-form-label col-form-label-sm">X:</label>
+							<div class="col-2">
+								<input type="text" class="form-control form-control-sm" id="imageItemX">
+							</div>
+							<label for="imageItemY" class="col-2 col-form-label col-form-label-sm">Y:</label>
+							<div class="col-2">
+								<input type="text" class="form-control form-control-sm" id="imageItemY">
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label for="imageItemSizeType" class="col-3 col-form-label col-form-label-sm">Koko</label>
+							<div class="col-9">
+								<select id="imageItemSizeType" class="form-select form-select-sm">
+									<option value="0">Alkuperäinen</option>
+									<option value="1">Skaalattu</option>
+									<option value="2">Lukittu koko</option>
+								</select>
+							</div>
+						</div>
+						<div id="imageItemResizer">
+							<div id="imageItemSizeScaled" class="row mb-2 visibleToggle">
+								<label for="imageItemScaleRatio" class="offset-3 col-3 col-form-label col-form-label-sm">Skaalaus%</label>
+								<div class="col-2">
+									<input type="text" class="form-control form-control-sm" id="imageItemScaleRatio">
+								</div>
+							</div>
+							<div id="imageItemSizeManual" class="row mb-1 visibleToggle">
+								<label for="imageItemWidth" class="offset-3 col-2 col-form-label col-form-label-sm">Leveys:</label>
+								<div class="col-2">
+									<input type="text" class="form-control form-control-sm" id="imageItemScaledWidth">
+								</div>
+								<label for="imageItemHeight" class="col-2 col-form-label col-form-label-sm">Korkeus:</label>
+								<div class="col-2">
+									<input type="text" class="form-control form-control-sm" id="imageItemScaledHeight">
+								</div>
+								<div class="offset-3 col-9">
+									<div class="form-check">
+										<input type="checkbox" class="form-check-input" id="imageItemPreserveAspect">
+										<label class="form-check-label" for="imageItemPreserveAspect">Säilytä kuvasuhde</label>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label for="imageItemBackground" class="col-3 col-form-label col-form-label-sm">Tausta</label>
+							<div class="col-2">
+								<div class="form-check pt-1">
+									<input type="checkbox" class="form-check-input" id="imageItemBackground">
+								</div>
+							</div>
+							<label for="imageItemBackgroundColor" class="col-3 col-form-label col-form-label-sm">Taustaväri</label>
+							<div class="col">
+								<input type="color" class="form-control form-control-color form-control-sm" value="#ffffff" id="imageItemBackgroundColor">
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label for="imageItemPadding" class="col-3 col-form-label col-form-label-sm">Täyteleveys</label>
+							<div class="col-2">
+								<input type="text" class="form-control form-control-sm" id="imageItemPadding">
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label for="imageItemBorder" class="col-3 col-form-label col-form-label-sm">Reunaleveys</label>
+							<div class="col-2">
+								<input type="text" class="form-control form-control-sm" id="imageItemBorder">
+							</div>
+							<label for="imageItemBorderColor" class="col-3 col-form-label col-form-label-sm">Reunaväri</label>
+							<div class="col">
+								<input type="color" class="form-control form-control-color form-control-sm" value="#000000" id="imageItemBorderColor">
+							</div>
+						</div>
+						<div class="row mb-1">
+							<label for="imageItemRoundness" class="col-3 col-form-label col-form-label-sm">Kulmapyöreys</label>
+							<div class="col pt-1">
+								<input type="range" class="form-range" min="0" max="100" id="imageItemRoundness">
+							</div>
+						</div>
+					</div>
+				</div></div>
+			</div></div>
+
+			<!-- Canvas column -->
+			<div id="canvasColumn" class="col-9 p-0 mh-100">
+				<canvas id="editorCanvas"></canvas>
+			</div>
+
+		</div>
+	
+	</div>
+
+	<div id="pageOverlay"></div>
+
+	<script src="inc/default.js"></script>
+	<script src="inc/constructors.js"></script>
+	<script src="inc/script.js"></script>
+	<script src="inc/eventlistener.js"></script>
+
+   <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
+</body>
+</html>

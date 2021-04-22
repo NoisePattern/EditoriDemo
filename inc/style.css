@@ -1,0 +1,75 @@
+#canvasManager {
+	background-color: #f0f0f0;
+}
+
+#itemManager {
+	background-color: #f0f0f0;
+}
+
+#textItem  {
+	display: none;
+	background-color: #f0f0f0;
+}
+
+#imageItem {
+	display: none;
+	background-color: #f0f0f0;
+}
+
+#textItemAreaManual {
+	display: none;
+}
+
+#imageItemSizeScaled {
+	display: none;
+}
+
+#imageItemSizeManual {
+	display: none;
+}
+
+#imageItemResizer {
+	height: 0px;
+	overflow: hidden;
+	transition: height 0.15s linear;
+}
+
+#textItemResizer {
+	height: 0px;
+	overflow: hidden;
+	transition: height 0.15s linear;	
+}
+
+#navigationBorder {
+	width: min-content;
+	height: min-content;
+	padding: 1px;
+	border: 1px solid black;
+}
+
+#navigation {
+	width: 0px;
+	height : 0px;
+	background-color: rgba(255, 128, 128, 1);
+
+}
+
+#navigationBox {
+	position: relative;
+	top: 1px;
+	left: 1px;
+	width: 50px;
+	height: 25px;
+	background-color: rgba(128, 128, 255, 1);
+}
+
+#pageOverlay {
+	display: none;
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	bottom: 0px;
+	left: 0px;
+	background-color: rgba(0, 0, 0, 0.15);
+	z-index: 10000;
+}
