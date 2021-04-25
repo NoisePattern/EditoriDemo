@@ -55,14 +55,19 @@ c.addEventListener('mousemove', function(e){
 	else {
 		// If canvas mousedrag is on, move canvas view.
 		if(canvasDragging){
+			// Calculate amounts moved from previous move position.
 			let DX = mouseDragX - Pos.x;
 			let DY = mouseDragY - Pos.y;
 			if(DX != 0 || DY != 0){
+				// Move view by calculated delta values.
 				let region = document.getElementById("canvasColumn");
 				canvasViewX = Math.max(0, Math.min(canvasViewX + DX, canvasWidth - region.offsetWidth));
 				canvasViewY = Math.max(0, Math.min(canvasViewY + DY, canvasHeight - region.offsetHeight));
+				// Set this position as previous position.
 				mouseDragX = Pos.x;
 				mouseDragY = Pos.y;
+				// Update navigator dragbox position.
+				navigationBoxPosition(canvasViewX / canvasWidth * parseInt(nav.offsetWidth), canvasViewY / canvasHeight * parseInt(nav.offsetHeight));
 				drawCanvas();
 			}
 		}
@@ -116,6 +121,7 @@ c.addEventListener('mouseleave', function(e){
 
 // --- Navigation listeners.
 
+// Mouse down on navigation area.
 nav.addEventListener('mousedown', function(e){
 	// Start drag action.
 	navigationDrag = true;
@@ -135,20 +141,31 @@ nav.addEventListener('mousedown', function(e){
 	}
 });
 
+// Mouse up on navigation area.
 nav.addEventListener('mouseup', function(){
 	// End drag action.
 	navigationDrag = false;
 });
 
+// Mouse move on navigation area.
 nav.addEventListener('mousemove', function(e){
 	// If drag action is running.
 	if(navigationDrag){
 		// New position is mouse position offset by grip position.
 		let Pos = getMousePos(nav, e);
 		navigationBoxPosition(Pos.x - navDX, Pos.y - navDY);
-		// Calculate offset into the canvas.
-		canvasViewX = Math.round((canvasWidth) * (parseInt(navBox.style.left) / nav.offsetWidth));
-		canvasViewY = Math.round((canvasHeight) * (parseInt(navBox.style.top) / nav.offsetHeight));
+		// If horizontal position of nav dragbox is at maximal right position, give maximal right canvas position instead of calculating it.
+		if(parseInt(navBox.style.left) == parseInt(nav.offsetWidth) - parseInt(navBox.offsetWidth)){
+			canvasViewX = canvasWidth - c.width;
+		} else {
+			canvasViewX = Math.max(0, Math.min(Math.round((canvasWidth) * (parseInt(navBox.style.left) / nav.offsetWidth)), canvasWidth - c.width));
+		}
+		// If vertical position of nav dragbox is at maximal bottom position, give maximal canvas bottom position instead of calculating it.
+		if(parseInt(navBox.style.top) == parseInt(nav.offsetWidth) - parseInt(navBox.offsetWidth)){
+			canvasViewY = canvasHeight - c.height;
+		} else {
+			canvasViewY = Math.max(0, Math.min(Math.round((canvasHeight) * (parseInt(navBox.style.top) / nav.offsetHeight)), canvasHeight - c.height));
+		}
 		drawCanvas();
 	}
 });

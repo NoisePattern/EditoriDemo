@@ -116,8 +116,6 @@ function navigationHide(){
 
 // Set size of navigation drag box.
 function navigationBoxSize(){
-	let actualWidth = parseInt(document.getElementById('canvasWidth').value);
-	let actualHeight = parseInt(document.getElementById('canvasHeight').value);
 	// Ratio of box to container width and height is the same as visible canvas area's ratio to actual canvas size.
 	navBox.style.width = (nav.offsetWidth * (c.width / canvasWidth)).toString() + 'px';
 	navBox.style.height = (nav.offsetHeight * (c.height / canvasHeight)).toString() + 'px';
