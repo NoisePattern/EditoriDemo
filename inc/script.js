@@ -13,13 +13,7 @@ let canvasDragKey = false;									// Canvas drag key (shift) has been pressed.
 let canvasDragging = false;									// Canvas is currently dragged.
 
 // Navigation setup.
-const nav = document.getElementById("navigation");			// Navigation container.
-const navBox = document.getElementById("navigationBox");	// Navigation dragbox.
-let navigationWidth = 150;									// Width of navigation container.
-let navBoxHover = false;									// Navbox has hover.
-let navigationDrag = false;									// Navbox is dragged.
-let navDX = 0;												// Navigation dragging reference X and Y values.
-let navDY = 0;
+const n = new Navigator();
 
 // Canvasitems setup.
 const canvasItems = [];										// Array of items created to canvas.
@@ -75,8 +69,9 @@ function canvasResize(){
 	let height = canvasHeight;
 	
 	// Resize navigation area to same aspect as actual canvas. 
-	let navHeight = Math.round((height / width) * navigationWidth);
-	nav.style.height = navHeight.toString() + "px";
+	n.setNavSize();
+//	let navHeight = Math.round((height / width) * navigationWidth);
+//	nav.style.height = navHeight.toString() + "px";
 
 	// Fit canvas to its div container if wider or taller than the div.
 	if(region.offsetWidth < width){
@@ -96,37 +91,8 @@ function canvasResize(){
 	drawCanvas();
 	
 	// Update navigator.
-	navigationBoxSize();
-}
-
-
-
-// -- Navigator.
-
-// Display navigator.
-function navigationShow(){
-	nav.style.display = "block";
-	navigationBoxSize();
-}
-
-// Hide navigator.
-function navigationHide(){
-	nav.style.display = "none";
-}
-
-// Set size of navigation drag box.
-function navigationBoxSize(){
-	// Ratio of box to container width and height is the same as visible canvas area's ratio to actual canvas size.
-	navBox.style.width = (nav.offsetWidth * (c.width / canvasWidth)).toString() + 'px';
-	navBox.style.height = (nav.offsetHeight * (c.height / canvasHeight)).toString() + 'px';
-	navigationBoxPosition(Math.round(nav.offsetWidth * canvasViewX / canvasWidth), Math.round(nav.offsetHeight * canvasViewY / canvasHeight));
-}
-
-function navigationBoxPosition(_x, _y){
-	_x = Math.max(0, Math.min(parseInt(nav.offsetWidth) - parseInt(navBox.offsetWidth), _x));
-	_y = Math.max(0, Math.min(parseInt(nav.offsetHeight) - parseInt(navBox.offsetHeight), _y));
-	navBox.style.left = _x.toString() + "px";
-	navBox.style.top = _y.toString() + "px";
+	n.setNavBoxSize();
+	//navigationBoxSize();
 }
 
 

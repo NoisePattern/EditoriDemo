@@ -7,11 +7,10 @@ window.addEventListener("DOMContentLoaded", function(){
 	document.getElementById('canvasWidth').value = canvasWidth;
 	document.getElementById('canvasHeight').value = canvasHeight;
 	document.getElementById('canvasColor').value = colorCanvas;	
-	canvasResize();
-	nav.style.width = navigationWidth.toString() + "px";
-	let navHeight = Math.round((c.height / c.width) * navigationWidth);
-	nav.style.height = navHeight.toString() + "px";
-	navigationBoxSize();	
+	c.width = canvasWidth;
+	c.height = canvasHeight;
+	n.setNavSize();
+	n.setNavBoxSize();
 	drawCanvas();
 });
 
@@ -23,8 +22,8 @@ window.addEventListener("resize", function(){
 // When navigation viewbox is dragged, mouse can easily move outside the navigation box, so mouseup should not be listened on the navbox.
 // Instead, the entire document area listens for mouseup and ends navbox dragging if it is active.
 window.addEventListener("mouseup", function(){
-	if(navigationDrag){
-		navigationDrag = false;
+	if(n.navigationDrag){
+		n.navBoxDrag = false;
 	}
 });
 
@@ -67,7 +66,7 @@ c.addEventListener('mousemove', function(e){
 				mouseDragX = Pos.x;
 				mouseDragY = Pos.y;
 				// Update navigator dragbox position.
-				navigationBoxPosition(canvasViewX / canvasWidth * parseInt(nav.offsetWidth), canvasViewY / canvasHeight * parseInt(nav.offsetHeight));
+				n.setNavBoxPosition(canvasViewX / canvasWidth * n.navWidth, canvasViewY / canvasHeight * n.navHeight);
 				drawCanvas();
 			}
 		}
@@ -122,52 +121,18 @@ c.addEventListener('mouseleave', function(e){
 // --- Navigation listeners.
 
 // Mouse down on navigation area.
-nav.addEventListener('mousedown', function(e){
-	// Start drag action.
-	navigationDrag = true;
-	// Check if mouse is over the draggable navigation rectangle (#navigationBox).
-	let Pos = getMousePos(nav, e);
-	let hover = pointInRectangle(Pos.x, Pos.y, parseInt(navBox.style.left), parseInt(navBox.style.top), navBox.offsetWidth, navBox.offsetHeight);
-	// If not over, set the grip position to center of the draggable and reposition it under the mouse pointer.
-	if(!hover){
-		navDX = Pos.x - parseInt(navBox.offsetWidth) / 2;
-		navDY = Pos.y - parseInt(navBox.offsetHeight) / 2;
-		navigationBoxPosition(Pos.x - navDX, Pos.y - navDY);
-	}
-	// If over, calculate the grip position (distance from element's upper left corner to mouse pointer.
-	else {
-		navDX = Pos.x - parseInt(navBox.style.left);
-		navDY = Pos.y - parseInt(navBox.style.top);
-	}
+n.nav.addEventListener('mousedown', function(e){
+	n.dragBegin(e);
 });
 
 // Mouse up on navigation area.
-nav.addEventListener('mouseup', function(){
-	// End drag action.
-	navigationDrag = false;
+n.nav.addEventListener('mouseup', function(){
+	n.dragEnd();
 });
 
 // Mouse move on navigation area.
-nav.addEventListener('mousemove', function(e){
-	// If drag action is running.
-	if(navigationDrag){
-		// New position is mouse position offset by grip position.
-		let Pos = getMousePos(nav, e);
-		navigationBoxPosition(Pos.x - navDX, Pos.y - navDY);
-		// If horizontal position of nav dragbox is at maximal right position, give maximal right canvas position instead of calculating it.
-		if(parseInt(navBox.style.left) == parseInt(nav.offsetWidth) - parseInt(navBox.offsetWidth)){
-			canvasViewX = canvasWidth - c.width;
-		} else {
-			canvasViewX = Math.max(0, Math.min(Math.round((canvasWidth) * (parseInt(navBox.style.left) / nav.offsetWidth)), canvasWidth - c.width));
-		}
-		// If vertical position of nav dragbox is at maximal bottom position, give maximal canvas bottom position instead of calculating it.
-		if(parseInt(navBox.style.top) == parseInt(nav.offsetWidth) - parseInt(navBox.offsetWidth)){
-			canvasViewY = canvasHeight - c.height;
-		} else {
-			canvasViewY = Math.max(0, Math.min(Math.round((canvasHeight) * (parseInt(navBox.style.top) / nav.offsetHeight)), canvasHeight - c.height));
-		}
-		drawCanvas();
-	}
+n.nav.addEventListener('mousemove', function(e){
+	n.dragBox(e);
 });
 
 

@@ -1,5 +1,109 @@
 // CLASS CONSTRUCTORS
 
+// Navigator class constructor.
+//
+// Navigator lets users quickly change the canvas view's position on canvas by dragging the visible area indicator around the navigation area.
+// The navigation area width and height are always at the same ratio as those of canvas. The draggable navigation box's (navbox) width and
+// height in relation to navigation area are always the same as visible canvas area's to the canvas. For example, if the visible canvas area
+// is only half the width and height of the whole canvas, the navbox is half the width and height of the navigation area.
+
+class Navigator {
+
+	constructor(){
+		this.nav = document.getElementById("navigation");			// Navigation area ID.
+		this.navBox = document.getElementById("navigationBox");		// Draggable navigation box (navbox) ID.
+		this.navWidth = 150;				// Width of navigation area.
+		this.navHeight = 0;					// Height of navigation area.
+		this.navBoxX = 0;					// Navbox position relative to navigation area.
+		this.navBoxY = 0;
+		this.navBoxWidth = 0;				// Navbox width.
+		this.navBoxHeight = 0;				// Navbox height.
+		this.navBoxHover = false;			// Navbox has hover.
+		this.navBoxDrag = false;			// Navbox is being moved.
+		this.DX = 0;						// Movement delta reference positions when navbox is moving.
+		this.DY = 0;
+	}
+
+	// Sets navigation area size.
+	setNavSize(){
+		this.nav.style.width = this.navWidth.toString() + "px";
+		// Calculate height by scaling it from area width by canvas' aspect ratio.
+		this.navHeight = Math.round((canvasHeight / canvasWidth) * this.navWidth);
+		this.nav.style.height = this.navHeight.toString() + "px";
+	}
+
+	// Sets navigation box size.
+	setNavBoxSize(){
+		// Ratio of navbox width and height to nav-area width and height is the same as canvas view's ratio to canvas.
+		this.navBoxWidth = Math.round(this.navWidth * (c.width / canvasWidth));
+		this.navBoxHeight = Math.round(this.navHeight * (c.height / canvasHeight));
+		this.navBox.style.width = this.navBoxWidth.toString() + "px";
+		this.navBox.style.height = this.navBoxHeight.toString() + "px";
+		// Also set position. (It likely has changed if something has prompted a size change.)
+		this.setNavBoxPosition(Math.round(this.navWidth * canvasViewX / canvasWidth), Math.round(this.navHeight * canvasViewY / canvasHeight));
+	}
+
+	// Sets navigation box position.
+	setNavBoxPosition(_x, _y){
+		// Min&max the position inside valid region before setting to CSS. (Rounded values may throw it over by a pixel at certain sizes.)
+		this.navBoxX = Math.max(0, Math.min(this.navWidth - this.navBoxWidth, _x));
+		this.navBoxY = Math.max(0, Math.min(this.navHeight - this.navBoxHeight, _y));
+		this.navBox.style.left = this.navBoxX.toString() + "px";
+		this.navBox.style.top = this.navBoxY.toString() + "px";
+	}
+	
+	// Start navbox dragging. Called by eventlistener when mouse is pressed down over nav area.
+	dragBegin(e){
+		this.navBoxDrag = true;
+		// Check if mouse is over the draggable navigation box.
+		let Pos = getMousePos(this.nav, e);
+		let hover = pointInRectangle(Pos.x, Pos.y, this.navBoxX, this.navBoxY, this.navBoxWidth, this.navBoxHeight);
+		// If not over, set the reference position to center of the navbox and reposition it under the mouse pointer.
+		if(!hover){
+			console.log("MX: " + Pos.x.toString() + " MY: " + Pos.y.toString());
+			this.DX = this.navBoxWidth / 2;
+			this.DY = this.navBoxHeight / 2;
+			console.log("DX:" + this.DX.toString() + " DY: " + this.DY.toString());
+			// Move box under mouse.
+			this.setNavBoxPosition(Math.round(Pos.x - this.DX), Math.round(Pos.y - this.DY));
+		}
+		// If over, set grip position in relation to mouse over navbox.
+		else {
+			this.DX = Pos.x - this.navBoxX;
+			this.DY = Pos.y - this.navBoxY;
+			console.log("DX:" + this.DX.toString() + " DY: " + this.DY.toString());
+		}
+	}
+
+	// Drag navbox.
+	dragBox(e){
+		// If drag action is running.
+		if(this.navBoxDrag){
+			// New position is mouse position offset by grip position.
+			let Pos = getMousePos(n.nav, e);
+			this.setNavBoxPosition(Math.round(Pos.x - this.DX), Math.round(Pos.y - this.DY));
+			// If horizontal position of navbox is at maximal right position, give maximal right canvas position instead of calculating it.
+			if(this.navBoxX == this.navWidth - this.navBoxWidth){
+				canvasViewX = canvasWidth - c.width;
+			} else {
+				canvasViewX = Math.max(0, Math.min(Math.round(canvasWidth * this.navBoxX / this.navWidth), canvasWidth - c.width));
+			}
+			// If vertical position of nav dragbox is at maximal bottom position, give maximal canvas bottom position instead of calculating it.
+			if(this.navBoxY == this.navWidth - this.navBoxHeight){
+				canvasViewY = canvasHeight - c.height;
+			} else {
+				canvasViewY = Math.max(0, Math.min(Math.round(canvasHeight * this.navBoxY / this.navHeight), canvasHeight - c.height));
+			}
+			drawCanvas();
+		}
+	}
+	
+	// Ends dragging.
+	dragEnd(){
+		this.navBoxDrag = false;
+	}
+}
+
 // Item class base constructor.
 class Item {
 
