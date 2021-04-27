@@ -1,5 +1,232 @@
 // CLASS CONSTRUCTORS
 
+// Canvas class constructor.
+class Canvas {
+
+	constructor(){
+		// Canvas variables
+		this.c = document.getElementById("editorCanvas");			// Canvas element.
+		this.ctx = this.c.getContext("2d");							// Canvas 2D draw context.
+		this.canvasWidth = 1000;									// Initial canvas width.
+		this.canvasHeight = 600;									// Initial canvas height.
+		this.canvasViewX = 0;										// X and Y offsets of visible area. Can be non-zero when canvas is larger than containing div.
+		this.canvasViewY = 0;
+		this.mouseDragX = 0;										// Dragging reference X and Y values.
+		this.mouseDragY = 0;
+		this.canvasDragKey = false;									// Canvas drag key (shift) has been pressed.
+		this.canvasDragging = false;								// Canvas is currently dragged.
+		this.colorCanvas = '#f0f0f0';								// Canvas background color.
+		this.bgCanvas = new Image();								// Canvas background image.
+		this.bgCanvas.onload = () => {								// Callback for canvas background image loaded event.
+			this.bgIsLoaded = true;
+			this.draw();
+		}
+		this.bgIsLoaded = false;									// A background image has been loaded.
+		this.bgStretch = false;										// Background image is stretched to canvas size.
+		
+		// Canvas items variables.
+		this.canvasItems = [];										// Array of items created to canvas.
+		this.selectedItem = -1;										// Currently selected item.
+		this.hoveredItem = -1;										// Item that currently has mouse hover.
+		this.draggedItem = -1;										// Item that is currently dragged.
+		this.targetItem = -1;										// File upload's target item.
+		this.runningCount = 1;										// Running counter for item names.
+		this.showBounds = true;										// Toggle for drawing item borders.
+	}
+
+	// Draw all canvas content.
+	draw(){
+		// Background color, and background image if set.
+		this.ctx.fillStyle = this.colorCanvas;
+		this.ctx.fillRect(0, 0, this.c.width, this.c.height);
+		if(this.bgIsLoaded){
+			if(this.bgStretch){
+				this.ctx.drawImage(this.bgCanvas, 0 - this.canvasViewX, 0 - this.canvasViewY, this.canvasWidth, this.canvasHeight);
+			} else {
+				this.ctx.drawImage(this.bgCanvas, 0 - this.canvasViewX, 0 - this.canvasViewY);
+			}
+		}
+		// Loop through all items (array index order is used as depth order) and run their draw methods.
+		this.canvasItems.forEach(function(item, index){
+			item.draw(index);
+		});
+	}
+
+	// Resize canvas.
+	resize(){
+		let region = document.getElementById("canvasColumn");							// Div containing the canvas.
+		this.canvasWidth = parseInt(document.getElementById('canvasWidth').value);		// Get canvas width.
+		this.canvasHeight = parseInt(document.getElementById('canvasHeight').value);	// Get canvas height.
+		let width = this.canvasWidth;
+		let height = this.canvasHeight;
+		
+		// Resize navigation area to same aspect as actual canvas. 
+		n.setNavSize();
+
+		// Fit canvas to its div container if wider or taller than the div.
+		if(region.offsetWidth < width){
+			width = region.offsetWidth;
+		}
+		if(region.offsetHeight < height){
+			height = region.offsetHeight;
+		}
+
+		// View position must remain within actual canvas region if canvas size has shrunk.
+		this.canvasViewX = Math.min(this.canvasViewX, this.canvasWidth - width);
+		this.canvasViewY = Math.min(this.canvasViewY, this.canvasHeight - height);
+
+		// Set canvas size. Canvas content has to be redrawn after canvas element receives a new size.
+		this.c.width = width;
+		this.c.height = height;
+		this.draw();
+		
+		// Update navbox size and position.
+		n.setNavBoxSize();
+	}
+
+	// Set background color.
+	colorBG(_color){
+		this.colorCanvas = _color;
+		this.draw();
+	}
+	// Load background image.
+	loadBG(_file){
+		let fr = new FileReader();
+		fr.onload = () => {
+			this.bgCanvas.src = fr.result;
+		};
+		fr.readAsDataURL(_file);
+
+	}
+	// Remove background image.
+	removeBG(){
+		let input = document.getElementById('canvasFileInput');
+		input.value = '';
+		this.bgCanvas.scr = '';
+		this.bgIsLoaded = false;
+		this.draw();		
+	}
+	
+	// Switch background image stretch state.
+	stretchBG(_stretch){
+		this.bgStretch = _stretch;
+		this.draw();
+	}
+	
+	// Switch item bounds display state.
+	itemBounds(_state){
+		this.showBounds = _state;
+		this.draw();
+	}
+	
+	// Mousebutton down on canvas.
+	mouseDown(e){
+		let Pos = getMousePos(canvas.c, e);
+		// If shift has been pressed, start dragging canvas.
+		if(this.canvasDragKey){
+			this.canvasDragging = true;
+			this.mouseDragX = Pos.x;
+			this.mouseDragY = Pos.y;
+		}
+		// Otherwise, if there is an item under pointer, make it selected.
+		else if(this.hoveredItem != -1){
+			Item.selectItem(this.hoveredItem);
+			// Selected item is also the item being dragged, until mouse up event fires.
+			this.draggedItem = this.hoveredItem;
+			this.mouseDragX = Pos.x - this.canvasItems[this.hoveredItem].x;
+			this.mouseDragY = Pos.y - this.canvasItems[this.hoveredItem].y;
+		}
+	}
+	
+	// Mousebutton up on canvas.
+	mouseUp(){
+		this.canvasDragging = false;
+		this.draggedItem = -1;
+	}
+	
+	// Mousepointer leaves canvas.
+	mouseLeave(){
+		this.canvasDragging = false;
+		this.hoveredItem = -1;
+		this.draggedItem = -1;
+		this.draw();
+	}
+	
+	// Drag canvas.
+	mouseMove(e){
+		let Pos = getMousePos(canvas.c, e);
+		// If an item is currently dragged.
+		if(this.draggedItem != -1){
+			// Change item position by amount mouse has moved.
+			this.canvasItems[this.draggedItem].move(Pos.x - this.mouseDragX, Pos.y - this.mouseDragY);
+		}
+		// If no item is dragged.
+		else {
+			// If canvas mousedrag is on, move canvas view.
+			if(this.canvasDragging){
+				// Calculate amounts moved from previous move position.
+				let DX = this.mouseDragX - Pos.x;
+				let DY = this.mouseDragY - Pos.y;
+				if(DX != 0 || DY != 0){
+					// Move view by calculated delta values.
+					let region = document.getElementById("canvasColumn");
+					this.canvasViewX = Math.max(0, Math.min(this.canvasViewX + DX, this.canvasWidth - region.offsetWidth));
+					this.canvasViewY = Math.max(0, Math.min(this.canvasViewY + DY, this.canvasHeight - region.offsetHeight));
+					// Set this position as previous position.
+					this.mouseDragX = Pos.x;
+					this.mouseDragY = Pos.y;
+					// Update navigator dragbox position.
+					n.setNavBoxPosition(this.canvasViewX / this.canvasWidth * n.navWidth, this.canvasViewY / this.canvasHeight * n.navHeight);
+					this.draw();
+				}
+			}
+			// Otherwise check for hovers.
+			else {
+				// Loop through all items and find if any is under mouse pointer, select it as hovered.
+				let previous = this.hoveredItem;
+				this.hoveredItem = -1;
+				this.canvasItems.forEach(function(item, index){
+					if(item.getHover(Pos.x, Pos.y)) canvas.hoveredItem = index;
+				});
+				// Redraw canvas if hover state has changed and bounding box drawing is enabled (hovered item must get the correct bounding color).
+				if(this.showBounds && previous != this.hoveredItem) this.draw();
+			}
+		}
+	}
+	
+	makeImage(){
+		let overlay = document.getElementById("pageOverlay");
+		overlay.style.display = "block";
+		// Create temp canvas for draw and set it to full canvas size.
+		let c2 = document.createElement("canvas");
+		c2.width = this.canvasWidth;
+		c2.height = this.canvasHeight;
+		// Switch draw context to new canvas.
+		this.ctx = c2.getContext("2d");
+		// Canvas view offsets are set temporarily to zero because they are for viewable canvas, not the target canvas.
+		let tempVX = this.canvasViewX;
+		let tempVY = this.canvasViewY;
+		// Save boundary setting and turn boundaries off.
+		let tempBounds = this.showBounds;
+		this.showBounds = false;
+		this.canvasViewX = 0;
+		this.canvasViewY = 0;
+		// Draw and open image in new tab.
+		this.draw();
+
+		let newTab = window.open();
+		newTab.document.write('<img src="' + c2.toDataURL("image/png") + '">');
+		// Set draw context back to real canvas and return view offsets to correct values.
+		this.ctx = this.c.getContext("2d");
+		this.canvasViewX = tempVX;
+		this.canvasViewY = tempVY;
+		this.showBounds = tempBounds;
+		overlay.style.display = "none";
+	}
+}
+
+
+
 // Navigator class constructor.
 //
 // Navigator lets users quickly change the canvas view's position on canvas by dragging the visible area indicator around the navigation area.
@@ -28,19 +255,19 @@ class Navigator {
 	setNavSize(){
 		this.nav.style.width = this.navWidth.toString() + "px";
 		// Calculate height by scaling it from area width by canvas' aspect ratio.
-		this.navHeight = Math.round((canvasHeight / canvasWidth) * this.navWidth);
+		this.navHeight = Math.round((canvas.canvasHeight / canvas.canvasWidth) * this.navWidth);
 		this.nav.style.height = this.navHeight.toString() + "px";
 	}
 
 	// Sets navigation box size.
 	setNavBoxSize(){
 		// Ratio of navbox width and height to nav-area width and height is the same as canvas view's ratio to canvas.
-		this.navBoxWidth = Math.round(this.navWidth * (c.width / canvasWidth));
-		this.navBoxHeight = Math.round(this.navHeight * (c.height / canvasHeight));
+		this.navBoxWidth = Math.round(this.navWidth * (canvas.c.width / canvas.canvasWidth));
+		this.navBoxHeight = Math.round(this.navHeight * (canvas.c.height / canvas.canvasHeight));
 		this.navBox.style.width = this.navBoxWidth.toString() + "px";
 		this.navBox.style.height = this.navBoxHeight.toString() + "px";
 		// Also set position. (It likely has changed if something has prompted a size change.)
-		this.setNavBoxPosition(Math.round(this.navWidth * canvasViewX / canvasWidth), Math.round(this.navHeight * canvasViewY / canvasHeight));
+		this.setNavBoxPosition(Math.round(this.navWidth * canvas.canvasViewX / canvas.canvasWidth), Math.round(this.navHeight * canvas.canvasViewY / canvas.canvasHeight));
 	}
 
 	// Sets navigation box position.
@@ -60,10 +287,8 @@ class Navigator {
 		let hover = pointInRectangle(Pos.x, Pos.y, this.navBoxX, this.navBoxY, this.navBoxWidth, this.navBoxHeight);
 		// If not over, set the reference position to center of the navbox and reposition it under the mouse pointer.
 		if(!hover){
-			console.log("MX: " + Pos.x.toString() + " MY: " + Pos.y.toString());
 			this.DX = this.navBoxWidth / 2;
 			this.DY = this.navBoxHeight / 2;
-			console.log("DX:" + this.DX.toString() + " DY: " + this.DY.toString());
 			// Move box under mouse.
 			this.setNavBoxPosition(Math.round(Pos.x - this.DX), Math.round(Pos.y - this.DY));
 		}
@@ -71,7 +296,6 @@ class Navigator {
 		else {
 			this.DX = Pos.x - this.navBoxX;
 			this.DY = Pos.y - this.navBoxY;
-			console.log("DX:" + this.DX.toString() + " DY: " + this.DY.toString());
 		}
 	}
 
@@ -84,17 +308,17 @@ class Navigator {
 			this.setNavBoxPosition(Math.round(Pos.x - this.DX), Math.round(Pos.y - this.DY));
 			// If horizontal position of navbox is at maximal right position, give maximal right canvas position instead of calculating it.
 			if(this.navBoxX == this.navWidth - this.navBoxWidth){
-				canvasViewX = canvasWidth - c.width;
+				canvas.canvasViewX = canvas.canvasWidth - canvas.c.width;
 			} else {
-				canvasViewX = Math.max(0, Math.min(Math.round(canvasWidth * this.navBoxX / this.navWidth), canvasWidth - c.width));
+				canvas.canvasViewX = Math.max(0, Math.min(Math.round(canvas.canvasWidth * this.navBoxX / this.navWidth), canvas.canvasWidth - canvas.c.width));
 			}
 			// If vertical position of nav dragbox is at maximal bottom position, give maximal canvas bottom position instead of calculating it.
 			if(this.navBoxY == this.navWidth - this.navBoxHeight){
-				canvasViewY = canvasHeight - c.height;
+				canvas.canvasViewY = canvas.canvasHeight - canvas.c.height;
 			} else {
-				canvasViewY = Math.max(0, Math.min(Math.round(canvasHeight * this.navBoxY / this.navHeight), canvasHeight - c.height));
+				canvas.canvasViewY = Math.max(0, Math.min(Math.round(canvas.canvasHeight * this.navBoxY / this.navHeight), canvas.canvasHeight - canvas.c.height));
 			}
-			drawCanvas();
+			canvas.draw();
 		}
 	}
 	
@@ -108,22 +332,59 @@ class Navigator {
 class Item {
 
 	constructor(_x = 0, _y = 0){
-		this.name = '';						// Name displayed on layer control.
-		this.x = _x;						// Item x-position.
-		this.y = _y;						// Item y-position.
-		this.posX = 0;						// Content area x-position. 
-		this.posY = 0;						// Content area y-position.
-		this.width = 0;						// Content area width.
-		this.height = 0;					// Content area height.
-		this.roundness = 0;					// Corner roundness percentage. Roundless of zero draws sharp corners, hundred draws fully round corners.
-											// Actual size is calculated from shorter side. Thus, full roundness turns squares into circles, rectangles into pills.
-		this.padding = 0;					// Width of padding in pixels. Padding wraps around content area and uses its color.
-		this.background = true;				// Draw background toggle. When set to false content area will be transparent. Also affects padding.
-		this.backgroundColor = '#ffffff';	// Content area background color. Padding will use same color.
-		this.border = 0;					// Width of border in pixels. Border wraps around padding. Set to zero to draw no border. 
-		this.borderColor = '#000000';		// Border color.
+		this.name = '';												// Name displayed on layer control.
+		this.x = _x;												// Item x-position.
+		this.y = _y;												// Item y-position.
+		this.posX = 0;												// Content area x-position. 
+		this.posY = 0;												// Content area y-position.
+		this.width = 0;												// Content area width.
+		this.height = 0;											// Content area height.
+		this.roundness = 0;											// Corner roundness percentage. Roundless of zero draws sharp corners, hundred draws fully round corners.
+																	// Actual size is calculated from shorter side. Thus, full roundness turns squares into circles, rectangles into pills.
+		this.padding = 0;											// Width of padding in pixels. Padding wraps around content area and uses its color.
+		this.background = true;										// Draw background toggle. When set to false content area will be transparent. Also affects padding.
+		this.backgroundColor = '#ffffff';							// Content area background color. Padding will use same color.
+		this.border = 0;											// Width of border in pixels. Border wraps around padding. Set to zero to draw no border. 
+		this.borderColor = '#000000';								// Border color.
+		this.colorBorderDefault = 'rgba(0, 0, 0, 0.1)';				// Boundary color default value.
+		this.colorBorderHover = 'rgba(0, 0, 0, 0.5)';				// Boundary color when item is hovered.
+		this.colorBorderSelected = 'rgba(255, 128, 0, 0.5)';		// Boundary color when item is selected.	}
 	}
 
+	// Makes given item selected and runs UI updates accordingly.
+	static selectItem(_item){
+		// Make given item the currently selected item.
+		canvas.selectedItem = _item;
+		// Update dropdown selection to this item.
+		document.getElementById("itemSelect").value = _item;
+		// Display this item's manager panel.
+		this.displayItemManager(_item);
+		// Draw canvas if bounding boxes are displayed (the correct bounds must now be get the active selection color).
+		if(canvas.showBounds) canvas.draw();
+	}
+
+	static displayItemManager(_item){
+		// If item index has been given, show manager form with its data.
+		if(_item >= 0){
+			// If item is text item, text item manager is made visible.
+			if(canvas.canvasItems[_item].type === 'text'){
+				document.getElementById('textItem').style.display = 'block';
+				document.getElementById('imageItem').style.display = 'none';
+			}
+			// If item is image item, image item manager is made visible.
+			else if(canvas.canvasItems[_item].type === 'image'){
+				document.getElementById('textItem').style.display = 'none';
+				document.getElementById('imageItem').style.display = 'block';
+			}
+			// Have the item send its data to form elements.
+			canvas.canvasItems[_item].updateUI();
+		}
+		// Hide managers.
+		else {
+			document.getElementById('textItem').style.display = 'none';
+			document.getElementById('imageItem').style.display = 'none';
+		}
+	}
 	// Sets base area size. All items define their own function.
 	setArea(){
 	}
@@ -149,46 +410,45 @@ class Item {
 	// Sets background visibility.
 	setBackground(_background){
 		this.background = _background;
-		drawCanvas();
+		canvas.draw();
 	}
 
 	// Sets background color.
 	setBackgroundColor(_color){
-		console.log(_color);
 		this.backgroundColor = _color;
-		drawCanvas();
+		canvas.draw();
 	}
 
 	// Sets padding size.
 	setPadding(_padding){
 		this.padding = parseInt(_padding);
-		drawCanvas();
+		canvas.draw();
 	}
 
 	// Sets border size.
 	setBorder(_border){
 		this.border = parseInt(_border);
-		drawCanvas();
+		canvas.draw();
 	}
 	
 	// Sets border color.
 	setBorderColor(_color){
 		this.borderColor = _color;
-		drawCanvas();
+		canvas.draw();
 	}
 
 	// Sets edge roundness.
 	setRoundness(_roundness){
 		this.roundness = parseInt(_roundness);
-		drawCanvas();
+		canvas.draw();
 	}
 
 	// Checks if given coordinates are inside item's outermost bounds.
 	getHover(_x, _y){
 		let offset = this.padding + this.border;
 		let hover = pointInRectangle(
-			_x + canvasViewX,
-			_y + canvasViewY,
+			_x + canvas.canvasViewX,
+			_y + canvas.canvasViewY,
 			this.posX - offset,
 			this.posY - offset,
 			this.width + offset * 2 - 1,
@@ -203,7 +463,7 @@ class Item {
 		this.y = _y;
 		this.setArea();
 		this.updateUI();
-		drawCanvas();
+		canvas.draw();
 	}
 
 	// Draws background to cover base area and padding.
@@ -211,15 +471,15 @@ class Item {
 		if(this.background){
 			// If corners are rounded, save canvas state and clip draw area.
 			if(this.roundness > 0){
-				ctx.save();
+				canvas.ctx.save();
 				let path = this.createRoundedPath(this.padding);
-				ctx.clip(path);
+				canvas.ctx.clip(path);
 			}
-			ctx.fillStyle = this.backgroundColor;
-			ctx.fillRect(this.posX - this.padding - canvasViewX, this.posY - this.padding - canvasViewY, this.width + this.padding * 2, this.height + this.padding * 2);
+			canvas.ctx.fillStyle = this.backgroundColor;
+			canvas.ctx.fillRect(this.posX - this.padding - canvas.canvasViewX, this.posY - this.padding - canvas.canvasViewY, this.width + this.padding * 2, this.height + this.padding * 2);
 			// Restore canvas state.
 			if(this.roundness > 0){
-				ctx.restore();
+				canvas.ctx.restore();
 			}
 		}
 	}
@@ -228,24 +488,24 @@ class Item {
 	createRoundedPath(_offset){
 		let radius = Math.min(this.width / 2, this.height / 2) * (this.roundness / 100);
 		let path = new Path2D();
-		path.moveTo(this.posX - canvasViewX + radius, this.posY - canvasViewY - _offset);
-		path.lineTo(this.posX - canvasViewX + this.width - radius, this.posY - canvasViewY - _offset);
-		path.arcTo(this.posX - canvasViewX + this.width + _offset, this.posY - canvasViewY - _offset, this.posX - canvasViewX + this.width + _offset, this.posY - canvasViewY + radius, Math.max(0, radius + _offset));
-		path.lineTo(this.posX - canvasViewX + this.width + _offset, this.posY - canvasViewY + this.height - radius);
-		path.arcTo(this.posX - canvasViewX + this.width + _offset, this.posY - canvasViewY + this.height + _offset, this.posX - canvasViewX + this.width - radius, this.posY - canvasViewY + this.height + _offset, Math.max(0, radius + _offset));
-		path.lineTo(this.posX - canvasViewX + radius, this.posY - canvasViewY + this.height + _offset);
-		path.arcTo(this.posX - canvasViewX - _offset, this.posY - canvasViewY + this.height + _offset, this.posX - canvasViewX - _offset, this.posY - canvasViewY + this.height - radius, Math.max(0, radius + _offset));
-		path.lineTo(this.posX - canvasViewX - _offset, this.posY - canvasViewY + radius);
-		path.arcTo(this.posX - canvasViewX - _offset, this.posY - canvasViewY - _offset, this.posX - canvasViewX + radius, this.posY - canvasViewY - _offset, Math.max(0, radius + _offset));
+		path.moveTo(this.posX - canvas.canvasViewX + radius, this.posY - canvas.canvasViewY - _offset);
+		path.lineTo(this.posX - canvas.canvasViewX + this.width - radius, this.posY - canvas.canvasViewY - _offset);
+		path.arcTo(this.posX - canvas.canvasViewX + this.width + _offset, this.posY - canvas.canvasViewY - _offset, this.posX - canvas.canvasViewX + this.width + _offset, this.posY - canvas.canvasViewY + radius, Math.max(0, radius + _offset));
+		path.lineTo(this.posX - canvas.canvasViewX + this.width + _offset, this.posY - canvas.canvasViewY + this.height - radius);
+		path.arcTo(this.posX - canvas.canvasViewX + this.width + _offset, this.posY - canvas.canvasViewY + this.height + _offset, this.posX - canvas.canvasViewX + this.width - radius, this.posY - canvas.canvasViewY + this.height + _offset, Math.max(0, radius + _offset));
+		path.lineTo(this.posX - canvas.canvasViewX + radius, this.posY - canvas.canvasViewY + this.height + _offset);
+		path.arcTo(this.posX - canvas.canvasViewX - _offset, this.posY - canvas.canvasViewY + this.height + _offset, this.posX - canvas.canvasViewX - _offset, this.posY - canvas.canvasViewY + this.height - radius, Math.max(0, radius + _offset));
+		path.lineTo(this.posX - canvas.canvasViewX - _offset, this.posY - canvas.canvasViewY + radius);
+		path.arcTo(this.posX - canvas.canvasViewX - _offset, this.posY - canvas.canvasViewY - _offset, this.posX - canvas.canvasViewX + radius, this.posY - canvas.canvasViewY - _offset, Math.max(0, radius + _offset));
 		return path;
 	}
 
 	// Draws border outside a region defined by base area and padding.
 	drawBorder(){
 		if(this.border > 0){
-			ctx.beginPath();
-			ctx.strokeStyle = this.borderColor;
-			ctx.lineWidth = this.border;
+			canvas.ctx.beginPath();
+			canvas.ctx.strokeStyle = this.borderColor;
+			canvas.ctx.lineWidth = this.border;
 			// Canvas linedraw operation wants the line's middle position as coordinates, so the correct position to draw is half the border's width, plus padding.
 			let adjust = this.padding + this.border / 2 - 1;
 			// Calculate radius for rounded corners.
@@ -256,26 +516,28 @@ class Item {
 				var path = this.createRoundedPath(adjust);
 			} else {
 				var path = new Path2D();
-				path.moveTo(this.posX - adjust - this.border / 2 - canvasViewX, this.posY - adjust - canvasViewY);
-				path.lineTo(this.posX + this.width + adjust - canvasViewX, this.posY - adjust - canvasViewY);
-				path.lineTo(this.posX + this.width + adjust - canvasViewX, this.posY + this.height + adjust - canvasViewY);
-				path.lineTo(this.posX - adjust - canvasViewX, this.posY + this.height + adjust - canvasViewY);
-				path.lineTo(this.posX - adjust - canvasViewX, this.posY - adjust - canvasViewY);
+				path.moveTo(this.posX - adjust - this.border / 2 - canvas.canvasViewX, this.posY - adjust - canvas.canvasViewY);
+				path.lineTo(this.posX + this.width + adjust - canvas.canvasViewX, this.posY - adjust - canvas.canvasViewY);
+				path.lineTo(this.posX + this.width + adjust - canvas.canvasViewX, this.posY + this.height + adjust - canvas.canvasViewY);
+				path.lineTo(this.posX - adjust - canvas.canvasViewX, this.posY + this.height + adjust - canvas.canvasViewY);
+				path.lineTo(this.posX - adjust - canvas.canvasViewX, this.posY - adjust - canvas.canvasViewY);
 			}
-			ctx.stroke(path);
+			canvas.ctx.stroke(path);
 		}
 	}
 
 	// Draws highlight boundary around hovered or selected item.
 	drawBounds(_index){
-		if(showBounds){
-			ctx.lineWidth = 2;
-			if(selectedItem == _index) ctx.strokeStyle = colorBorderSelected;
-			else if(hoveredItem == _index) ctx.strokeStyle = colorBorderHover;
-			else ctx.strokeStyle = colorBorderDefault;
-			ctx.strokeRect(
-				this.posX - this.padding - this.border - 1 - canvasViewX,
-				this.posY - this.padding - this.border - 1 - canvasViewY,
+		if(canvas.showBounds){
+			canvas.ctx.lineWidth = 2;
+			if(canvas.selectedItem == _index) canvas.ctx.strokeStyle = this.colorBorderSelected;
+			else if(canvas.hoveredItem == _index){
+				canvas.ctx.strokeStyle = this.colorBorderHover;
+			}
+			else canvas.ctx.strokeStyle = this.colorBorderDefault;
+			canvas.ctx.strokeRect(
+				this.posX - this.padding - this.border - 1 - canvas.canvasViewX,
+				this.posY - this.padding - this.border - 1 - canvas.canvasViewY,
 				this.width + (this.padding + this.border) * 2 + 2,
 				this.height + (this.padding + this.border) * 2 + 2
 			);
@@ -304,7 +566,7 @@ class ImageItem extends Item {
 			this.scaling = 0;
 			this.setArea(true);
 			this.updateUI();
-			drawCanvas();
+			canvas.draw();
 		};
 	}
 
@@ -385,7 +647,7 @@ class ImageItem extends Item {
 	setScalingType(_type){
 		this.scaling = _type;
 		this.setArea();
-		drawCanvas();
+		canvas.draw();
 	}
 
 	// Set scaling ratio.
@@ -393,7 +655,7 @@ class ImageItem extends Item {
 		this.scaleRatio = _scaleRatio;
 		this.setArea();
 		this.updateUI();
-		drawCanvas();
+		canvas.draw();
 	}
 
 	// Set manual scale.
@@ -401,7 +663,7 @@ class ImageItem extends Item {
 		this.scaledWidth = Math.round(document.getElementById("imageItemScaledWidth").value);
 		this.scaledHeight = Math.round(document.getElementById("imageItemScaledHeight").value);
 		this.setArea();
-		drawCanvas();
+		canvas.draw();
 	}
 	
 	// Toggle aspect ratio preservation.
@@ -419,7 +681,7 @@ class ImageItem extends Item {
 		}
 		this.setArea();
 		this.updateUI();
-		drawCanvas();
+		canvas.draw();
 		
 	}
 
@@ -429,25 +691,25 @@ class ImageItem extends Item {
 		this.drawBorder();
 		// If corners are rounded save canvas state and create clip area.
 		if(this.roundness > 0){
-			ctx.save();
+			canvas.ctx.save();
 			let path = this.createRoundedPath(0);
-			ctx.clip(path);
+			canvas.ctx.clip(path);
 		}
 		// If image is drawn at original size.
 		if(this.scaling == 0){
-			ctx.drawImage(this.image, this.x - canvasViewX, this.y - canvasViewY);
+			canvas.ctx.drawImage(this.image, this.x - canvas.canvasViewX, this.y - canvas.canvasViewY);
 		}
 		// If image is drawn with percentage scaling.
 		else if(this.scaling == 1){
-			ctx.drawImage(this.image, this.x - canvasViewX, this.y - canvasViewY, this.image.width * (this.scaleRatio / 100), this.image.height * (this.scaleRatio / 100));
+			canvas.ctx.drawImage(this.image, this.x - canvas.canvasViewX, this.y - canvas.canvasViewY, this.image.width * (this.scaleRatio / 100), this.image.height * (this.scaleRatio / 100));
 		}
 		// If image is drawn with manual scaling.
 		else if(this.scaling == 2){
-			ctx.drawImage(this.image, this.x - canvasViewX, this.y - canvasViewY, this.scaledWidth, this.scaledHeight);
+			canvas.ctx.drawImage(this.image, this.x - canvas.canvasViewX, this.y - canvas.canvasViewY, this.scaledWidth, this.scaledHeight);
 		}
 		// Restore canvas.
 		if(this.roundness > 0){
-			ctx.restore();
+			canvas.ctx.restore();
 		}
 		this.drawBounds(_index);
 	}
@@ -499,9 +761,9 @@ class TextItem extends Item {
 		// If area is set to automatic resize.
 		if(this.areaType == 0){
 			// Get text measurements and update area.
-			ctx.font = this.fontSize + "px " + this.font;
-			ctx.textBaseline = "top";
-			this.measures = ctx.measureText(this.text);
+			canvas.ctx.font = this.fontSize + "px " + this.font;
+			canvas.ctx.textBaseline = "top";
+			this.measures = canvas.ctx.measureText(this.text);
 			this.posX = this.x;
 			this.posY = this.y - Math.abs(this.measures.actualBoundingBoxAscent);
 			this.width = Math.round(this.measures.width);
@@ -520,13 +782,13 @@ class TextItem extends Item {
 	setAreaType(_type){
 		this.areaType = _type;
 		this.setArea();
-		drawCanvas();
+		canvas.draw();
 	}
 	
 	// Set area values.
 	setAreaValues(){
 		this.setArea();
-		drawCanvas();
+		canvas.draw();
 	}
 
 	// Set contained text.
@@ -534,7 +796,7 @@ class TextItem extends Item {
 		this.text = _text;
 		this.setArea();
 		this.updateUI();
-		drawCanvas();
+		canvas.draw();
 	}
 
 	// Set font.
@@ -542,7 +804,7 @@ class TextItem extends Item {
 		this.font = _font;
 		this.setArea();
 		this.updateUI();
-		drawCanvas();
+		canvas.draw();
 	}
 	
 	// Set text size.
@@ -550,13 +812,13 @@ class TextItem extends Item {
 		this.fontSize = parseInt(_size);
 		this.setArea();
 		this.updateUI();
-		drawCanvas();
+		canvas.draw();
 	}
 	
 	// Set text color.
 	setTextColor(_color){
 		this.textColor = _color;
-		drawCanvas();
+		canvas.draw();
 	}
 
 	// Draw item to canvas.
@@ -566,10 +828,9 @@ class TextItem extends Item {
 		this.drawBounds(_index);
 
 		// Draw text content.
-		ctx.textBaseline = "top";
-		ctx.font = this.fontSize + "px " + this.font;
-		ctx.fillStyle = this.textColor;
-		ctx.fillText(this.text, this.x - canvasViewX, this.y - canvasViewY);
-		//ctx.globalAlpha = 1;
+		canvas.ctx.textBaseline = "top";
+		canvas.ctx.font = this.fontSize + "px " + this.font;
+		canvas.ctx.fillStyle = this.textColor;
+		canvas.ctx.fillText(this.text, this.x - canvas.canvasViewX, this.y - canvas.canvasViewY);
 	}
 }
