@@ -22,8 +22,8 @@ window.addEventListener("resize", function(){
 // When navigation viewbox is dragged, mouse can easily move outside the navigation box, so mouseup should not be listened on the navbox.
 // Instead, the entire document area listens for mouseup and ends navbox dragging if it is active.
 window.addEventListener("mouseup", function(){
-	if(n.navigationDrag){
-		n.navBoxDrag = false;
+	if(n.navBoxDrag){
+		n.dragEnd();
 	}
 });
 

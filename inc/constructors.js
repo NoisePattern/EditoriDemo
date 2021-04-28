@@ -11,6 +11,8 @@ class Canvas {
 		this.canvasHeight = 600;									// Initial canvas height.
 		this.canvasViewX = 0;										// X and Y offsets of visible area. Can be non-zero when canvas is larger than containing div.
 		this.canvasViewY = 0;
+		this.viewWidth = 1000;										// Width and height of canvas area visible on screen.
+		this.viewHeight = 600;
 		this.mouseDragX = 0;										// Dragging reference X and Y values.
 		this.mouseDragY = 0;
 		this.canvasDragKey = false;									// Canvas drag key (shift) has been pressed.
@@ -24,6 +26,8 @@ class Canvas {
 		this.bgIsLoaded = false;									// A background image has been loaded.
 		this.bgStretch = false;										// Background image is stretched to canvas size.
 		
+		this.uiWidth = 400;											// Width of tools UI area.
+
 		// Canvas items variables.
 		this.canvasItems = [];										// Array of items created to canvas.
 		this.selectedItem = -1;										// Currently selected item.
@@ -54,9 +58,10 @@ class Canvas {
 
 	// Resize canvas.
 	resize(){
-		let region = document.getElementById("canvasColumn");							// Div containing the canvas.
-		this.canvasWidth = parseInt(document.getElementById('canvasWidth').value);		// Get canvas width.
-		this.canvasHeight = parseInt(document.getElementById('canvasHeight').value);	// Get canvas height.
+		this.canvasWidth = parseInt(document.getElementById('canvasWidth').value);		// Get new canvas width setting.
+		this.canvasHeight = parseInt(document.getElementById('canvasHeight').value);	// Get new canvas height setting.
+		this.viewWidth = window.innerWidth - this.uiWidth;
+		this.viewHeight = window.innerHeight;
 		let width = this.canvasWidth;
 		let height = this.canvasHeight;
 		
@@ -64,11 +69,11 @@ class Canvas {
 		n.setNavSize();
 
 		// Fit canvas to its div container if wider or taller than the div.
-		if(region.offsetWidth < width){
-			width = region.offsetWidth;
+		if(this.viewWidth < width){
+			width = this.viewWidth;
 		}
-		if(region.offsetHeight < height){
-			height = region.offsetHeight;
+		if(this.viewHeight < height){
+			height = this.viewHeight;
 		}
 
 		// View position must remain within actual canvas region if canvas size has shrunk.
@@ -169,9 +174,8 @@ class Canvas {
 				let DY = this.mouseDragY - Pos.y;
 				if(DX != 0 || DY != 0){
 					// Move view by calculated delta values.
-					let region = document.getElementById("canvasColumn");
-					this.canvasViewX = Math.max(0, Math.min(this.canvasViewX + DX, this.canvasWidth - region.offsetWidth));
-					this.canvasViewY = Math.max(0, Math.min(this.canvasViewY + DY, this.canvasHeight - region.offsetHeight));
+					this.canvasViewX = Math.max(0, Math.min(this.canvasViewX + DX, this.canvasWidth - this.viewWidth));
+					this.canvasViewY = Math.max(0, Math.min(this.canvasViewY + DY, this.canvasHeight - this.viewHeight));
 					// Set this position as previous position.
 					this.mouseDragX = Pos.x;
 					this.mouseDragY = Pos.y;
@@ -241,6 +245,7 @@ class Navigator {
 		this.navBox = document.getElementById("navigationBox");		// Draggable navigation box (navbox) ID.
 		this.navWidth = 150;				// Width of navigation area.
 		this.navHeight = 0;					// Height of navigation area.
+		this.maxLength = 150;				// Maximum side length of navigation area.
 		this.navBoxX = 0;					// Navbox position relative to navigation area.
 		this.navBoxY = 0;
 		this.navBoxWidth = 0;				// Navbox width.
@@ -251,11 +256,21 @@ class Navigator {
 		this.DY = 0;
 	}
 
-	// Sets navigation area size.
+	// Sets navigation area to same aspect ratio as canvas area.
 	setNavSize(){
+		// If canvas is wider than taller.
+		if(canvas.canvasWidth >= canvas.canvasHeight){
+			// Set navigation area width to maximum set height to scale.
+			this.navWidth = this.maxLength;
+			this.navHeight = Math.round((canvas.canvasHeight / canvas.canvasWidth) * this.navWidth);
+		}
+		// Otherwise canvas is taller than wider.
+		else {
+			this.navHeight = this.maxLength;
+			this.navWidth = Math.round((canvas.canvasWidth / canvas.canvasHeight) * this.navHeight);
+		}
+		// Set navigation area dimensions.
 		this.nav.style.width = this.navWidth.toString() + "px";
-		// Calculate height by scaling it from area width by canvas' aspect ratio.
-		this.navHeight = Math.round((canvas.canvasHeight / canvas.canvasWidth) * this.navWidth);
 		this.nav.style.height = this.navHeight.toString() + "px";
 	}
 
