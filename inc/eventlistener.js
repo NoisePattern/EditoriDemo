@@ -200,8 +200,13 @@ document.getElementById("textItemName").addEventListener("change", function(){
 });
 
 // Content change.
-document.getElementById("textItemContent").addEventListener("change", function(){
+document.getElementById("textItemContent").addEventListener("input", function(){
 	canvas.canvasItems[canvas.selectedItem].setText(this.value);
+});
+
+// Recalculates textarea size if content is taller than its minimum height.
+document.getElementById("textItemContent").addEventListener("input", function(){
+	canvas.canvasItems[canvas.selectedItem].setTextarea(this);
 });
 
 // Font change.
@@ -217,6 +222,16 @@ document.getElementById("textItemSize").addEventListener("change", function(){
 // Font Color change.
 document.getElementById("textItemColor").addEventListener("change", function(){
 	canvas.canvasItems[canvas.selectedItem].setTextColor(this.value);
+});
+
+// Linespacing change.
+document.getElementById("textItemLineSpacing").addEventListener("change", function(){
+	canvas.canvasItems[canvas.selectedItem].setLineSpacing(this.value);
+});
+
+// Text alignment change.
+document.getElementById("textItemAlign").addEventListener("change", function(){
+	canvas.canvasItems[canvas.selectedItem].setAlign(this.value);
 });
 
 // X-position change.

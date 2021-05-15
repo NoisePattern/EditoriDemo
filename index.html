@@ -78,14 +78,14 @@
 					<h2 class="accordion-header"><button class="accordion-button p-1 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#itemCollapse">Kentät</button></h2>
 					<div id="itemCollapse" class="accordion-collapse collapse show" data-bs-parent="#itemManager"><div class="accordion-body p-1">
 						<div class="row mt-1 mb-2">
-							<label class="col-4 col-form-label col-form-label-sm">Uusi kenttä:</label>
+							<label class="col-4 col-form-label col-form-label-sm">Uusi kenttä</label>
 							<div class="col-8">
 								<button type="button" class="btn btn-primary btn-sm" id="addTextItem">Teksti</button>
 								<button type="button" class="btn btn-primary btn-sm" id="addImageItem">Kuva</button>
 							</div>
 						</div>
 						<div class="row mb-2">
-							<label class="col-4 col-form-label col-form-label-sm">Kentät:</label>
+							<label class="col-4 col-form-label col-form-label-sm">Kentät</label>
 							<div class="col-8">
 								<select id="itemSelect" class="form-select form-select-sm"></select>
 							</div>
@@ -123,7 +123,7 @@
 						<div class="row mb-2">
 							<label for="textItemContent" class="col-3 col-form-label col-form-label-sm">Teksti</label>
 							<div class="col-9">
-								<input type="text" class="form-control form-control-sm" id="textItemContent">
+								<textarea id="textItemContent" class="form-control form-control-sm"></textarea>
 							</div>
 						</div>
 						<div class="row mb-2">
@@ -149,6 +149,22 @@
 							<label for="textItemColor" class="col-3 col-form-label col-form-label-sm">Tekstiväri</label>
 							<div class="col-9">
 								<input type="color" class="form-control form-control-color form-control-sm" value="#000000" id="textItemColor">
+							</div>
+						</div>
+						<div class="row mb-2">
+							<label for="textItemLineSpacing" class="col-3 col-form-label col-form-label-sm">Riviväli</label>
+							<div class="col-2">
+								<input type="text" class="form-control form-control-sm" id="textItemLineSpacing">
+							</div>						
+						</div>
+						<div class="row mb-2">
+							<label for="textItemAlign" class="col-3 col-form-label col-form-label-sm">Tasaus</label>
+							<div class="col-9">
+								<select id="textItemAlign" class="form-select form-select-sm">
+									<option value="0">Vasen</option>
+									<option value="1">Keskitetty</option>
+									<option value="2">Oikea</option>
+								</select>
 							</div>
 						</div>
 						<div class="row mb-2">

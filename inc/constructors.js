@@ -26,7 +26,7 @@ class Canvas {
 		this.bgIsLoaded = false;									// A background image has been loaded.
 		this.bgStretch = false;										// Background image is stretched to canvas size.
 		
-		this.uiWidth = 400;											// Width of tools UI area.
+		this.uiWidth = 450;											// Width of tools UI area.
 
 		// Canvas items variables.
 		this.canvasItems = [];										// Array of items created to canvas.
@@ -733,23 +733,32 @@ class ImageItem extends Item {
 // Text item class.
 class TextItem extends Item {
 
-	constructor( _x, _y, _text = '(ei tekstiä)', _font = 'Arial', _fontSize = '20', _color = '#000000'){
+	constructor( _x, _y, _text = ['(ei tekstiä)'], _font = 'Arial', _fontSize = '20', _color = '#000000'){
 		super(_x, _y);
 		this.type = "text";
 		this.font = _font;
 		this.fontSize = _fontSize;
 		this.textColor = _color;
-		this.areaType = 0;
-		this.setText(_text);
+		this.lineSpacing = Math.round(_fontSize * 0.25);
+		this.align = 0;											// Set from dropdown: 0 = left, 1 = centered, 2 = right.
+		this.areaType = 0;										// Set from dropdown: 0 = automatic sizing, 1 = locked to user-input dimensions.
+		this.text = _text;										// Each line of text is an array entry.
+		this.setArea();
+		canvas.draw();
 	}
 
 	// Sets item data to form.
 	updateUI(){
 		document.getElementById('textItemName').value = this.name;
-		document.getElementById('textItemContent').value = this.text;
+		document.getElementById('textItemContent').value = this.text.join("\r\n");
+		// Resize textarea to this textitem's text content and reset horizontal scroll to left edge.
+		this.setTextarea(document.getElementById('textItemContent'));
+		document.getElementById('textItemContent').scrollLeft = 0;
 		document.getElementById('textItemFont').value = this.font;
 		document.getElementById('textItemSize').value = this.fontSize;
 		document.getElementById('textItemColor').value = this.textColor;
+		document.getElementById('textItemLineSpacing').value = this.lineSpacing;
+		document.getElementById('textItemAlign').value = this.align;
 		document.getElementById('textItemX').value = this.x;
 		document.getElementById('textItemY').value = this.y;
 		document.getElementById('textItemAreaType').value = this.areaType;
@@ -771,6 +780,25 @@ class TextItem extends Item {
 		document.getElementById('textItemRoundness').value = this.roundness;
 	}
 
+	// Sets textarea element's height to contained text's height.
+	setTextarea(_area){
+		// Get pixel widths of textarea's top and bottom borders.
+		let borderTop = parseInt(getComputedStyle(_area).borderTopWidth.slice(0, -2));
+		let borderBottom = parseInt(getComputedStyle(_area).borderBottomWidth.slice(0, -2));
+		// Set height first to 1px.
+		_area.style.height = "1px";
+		// Get the larger of minimum height and height of content (total text content height plus paddding) and set it as textarea height.
+		let height = Math.max(115, _area.scrollHeight);
+		_area.style.height = height + "px";
+		// If height of content is still larger than client height (content that is visible inside the element) it means either the borders or a horizontal scrollbar
+		// neither of which is part of scrollHeight are eating textarea height and obstructing content. Add the difference between content height and visible height
+		// to textarea height so all text is made visible.
+		if(_area.scrollHeight - _area.clientHeight > 0){
+			let extra = (_area.scrollHeight - _area.clientHeight) + borderTop + borderBottom;
+			_area.style.height = (height + extra) + "px";
+		}
+	}
+
 	// Calculate item area size.
 	setArea(){
 		// If area is set to automatic resize.
@@ -778,16 +806,25 @@ class TextItem extends Item {
 			// Get text measurements and update area.
 			canvas.ctx.font = this.fontSize + "px " + this.font;
 			canvas.ctx.textBaseline = "top";
-			this.measures = canvas.ctx.measureText(this.text);
 			this.posX = this.x;
-			this.posY = this.y - Math.abs(this.measures.actualBoundingBoxAscent);
-			this.width = Math.round(this.measures.width);
-			this.height = Math.round(Math.abs(this.measures.actualBoundingBoxDescent) + Math.abs(this.measures.actualBoundingBoxAscent));
+			this.width = 0;
+			this.height = 0;
+			// Loop through each line of text and update width and height values.
+			this.text.forEach((line, index) => {
+				let measures = canvas.ctx.measureText(line);
+				if(this.width < Math.round(measures.width)) this.width = Math.round(measures.width);
+				if(index == 0) this.posY = this.y - Math.abs(measures.actualBoundingBoxAscent);
+				this.height += parseInt(this.fontSize);
+				if(index < this.text.length - 1) this.height += this.lineSpacing;
+			});
+			// Add some extra to height so font descenders remain inside the box.
+			this.height += parseInt(this.fontSize) * 0.2;
 		}
 		// If area is locked to manually input size.
 		else if(this.areaType == 1){
+			let measures = canvas.ctx.measureText(this.text[0]);
 			this.posX = this.x;
-			this.posY = this.y - Math.abs(this.measures.actualBoundingBoxAscent);
+			this.posY = this.y - Math.abs(measures.actualBoundingBoxAscent);
 			this.width = Math.round(document.getElementById("textItemWidth").value);
 			this.height = Math.round(document.getElementById("textItemHeight").value);
 		}
@@ -808,7 +845,8 @@ class TextItem extends Item {
 
 	// Set contained text.
 	setText(_text){
-		this.text = _text;
+		// Split text into an array at linefeeds.
+		this.text = _text.split(/\r?\n/);
 		this.setArea();
 		this.updateUI();
 		canvas.draw();
@@ -829,23 +867,54 @@ class TextItem extends Item {
 		this.updateUI();
 		canvas.draw();
 	}
-	
+
 	// Set text color.
 	setTextColor(_color){
 		this.textColor = _color;
 		canvas.draw();
 	}
+	
+	// Set linespacing.
+	setLineSpacing(_lineSpacing){
+		this.lineSpacing = parseInt(_lineSpacing);
+		this.setArea();
+		this.updateUI();
+		canvas.draw();
+	}
 
+	// Set text alignment.
+	setAlign(_align){
+		this.align = parseInt(_align);
+		canvas.draw();
+	}
+	
 	// Draw item to canvas.
 	draw(_index){
 		this.drawBackground();
 		this.drawBorder();
 		this.drawBounds(_index);
 
-		// Draw text content.
+		// Draw text content. Set context font and color according to this textitem.
 		canvas.ctx.textBaseline = "top";
 		canvas.ctx.font = this.fontSize + "px " + this.font;
 		canvas.ctx.fillStyle = this.textColor;
-		canvas.ctx.fillText(this.text, this.x - canvas.canvasViewX, this.y - canvas.canvasViewY);
+		// Loop through all text lines.
+		this.text.forEach((line, index) => {
+			// If text is left-aligned.
+			if(this.align == 0){
+				canvas.ctx.textAlign = "left";
+				canvas.ctx.fillText(line, this.x - canvas.canvasViewX, this.y - canvas.canvasViewY + index * (parseInt(this.fontSize) + this.lineSpacing));
+			}
+			// If text is center-aligned.
+			else if(this.align == 1){
+				canvas.ctx.textAlign = "center";
+				canvas.ctx.fillText(line, this.x - canvas.canvasViewX + Math.round(this.width / 2), this.y - canvas.canvasViewY + index * (parseInt(this.fontSize) + this.lineSpacing));
+			}
+			// If text is right-aligned.
+			else if(this.align == 2){
+				canvas.ctx.textAlign = "right";
+				canvas.ctx.fillText(line, this.x - canvas.canvasViewX + this.width, this.y - canvas.canvasViewY + index * (parseInt(this.fontSize) + this.lineSpacing));
+			}
+		});
 	}
 }

@@ -1,6 +1,6 @@
 #uiColumn {
-	-ms-flex: 0 0 400px;
-	flex: 0 0 400px;
+	-ms-flex: 0 0 450px;
+	flex: 0 0 450px;
 }
 
 #canvasManager {
@@ -25,6 +25,10 @@
 	display: none;
 }
 
+#textItemContent {
+	height: 115px;
+	white-space: pre;
+}
 #imageItemSizeScaled {
 	display: none;
 }
