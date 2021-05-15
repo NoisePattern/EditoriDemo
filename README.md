@@ -32,13 +32,17 @@ Kun editorialueelle on lisätty ainakin yksi tekstikenttä, sen ominaisuuksia vo
 
 **Nimi:** Tekstikentälle voidaan antaa nimi jolla se esitetään Kentät-työkalun kenttäalasvedossa.
 
-**Teksti:** Teksti joka editorialueella esitetään. Toiminto ei tällä hetkellä tue tekstin rivitystä.
+**Teksti:** Teksti joka editorialueella esitetään. Teksi voidaan rivittää tarpeen mukaan.
 
 **Fontti:** Alasveto fonttivaihtoehdoista joita teksti voi käyttää.
 
 **Tekstikoko:** Tekstin koon syöttö.
 
 **Tekstiväri:** Tekstin fonttivärin valinta.
+
+**Riviväli:** Rivien välinen alue jos tekstisisältö on monirivistä.
+
+**Tasaus:** Tekstisisällön tasaus tekstikentän sisällä. Tukee arvoja vasen, keskitetty, oikea.
 
 **Sijainti:** Kentän sijaintia voidaan säätää syöttämällä kenttiin sen koordinaatit pikseleissä.
 
@@ -58,9 +62,9 @@ Kun editorialueelle on lisätty ainakin yksi tekstikenttä, sen ominaisuuksia vo
 
 **Kulmapyöreys:** Kentän kulmien pyöreyden säätö. Minimiasetuksella kulmat ovat terävät, maksimissa lyhyempi sivu säädetään koko pituudeltaan kaarevaksi.
 
-## Kuvakenttä
+### Kuvakenttä
 
-Kun editorialueelle on lisätty ainakin yksi kuvakenttä, sem ominaisuuksia voidaan muokata kuvakenttätoimintojen kautta.
+Kun editorialueelle on lisätty ainakin yksi kuvakenttä, sen ominaisuuksia voidaan muokata kuvakenttätoimintojen kautta.
 
 **Nimi:** Kuvakentälle voidaan antaa nimi jolla se esitetään Kentät-työkalun kenttäalasvedossa.
 
@@ -85,3 +89,9 @@ Kun editorialueelle on lisätty ainakin yksi kuvakenttä, sem ominaisuuksia void
 **Reunaväri:** Reunan värin valinta.
 
 **Kulmapyöreys:** Kentän kulmien pyöreyden säätö. Minimiasetuksella kulmat ovat terävät, maksimissa lyhyempi sivu säädetään koko pituudeltaan kaarevaksi.
+
+### Editorialue
+
+Pohjaan asetetut teksti- ja kuvakentät näkyvät täällä. Kenttiä voi valita editoitavaksi ja raahata hiirellä. Jos pohja on näkyvää aluetta suurempi, voi pohjaa raahata hiirellä pitämällä Shift-näppäin pohjassa.
+
+
